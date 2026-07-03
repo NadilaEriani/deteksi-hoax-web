@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dataset Info - Deteksi Hoaks</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+
+  <body>
+    <svg
+      aria-hidden="true"
+      style="position: absolute; width: 0; height: 0; overflow: hidden"
+    >
+      <symbol id="icon-shield" viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+      </symbol>
+
+      <symbol id="icon-grid" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+        <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+        <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+        <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+      </symbol>
+
+      <symbol id="icon-search" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="M21 21l-4.3-4.3"></path>
+      </symbol>
+
+      <symbol id="icon-chart" viewBox="0 0 24 24">
+        <path d="M4 19V5"></path>
+        <path d="M4 19h16"></path>
+        <path d="M8 16v-5"></path>
+        <path d="M12 16V8"></path>
+        <path d="M16 16v-9"></path>
+      </symbol>
+
+      <symbol id="icon-database" viewBox="0 0 24 24">
+        <ellipse cx="12" cy="5" rx="7" ry="3"></ellipse>
+        <path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5"></path>
+        <path d="M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"></path>
+      </symbol>
+
+      <symbol id="icon-file" viewBox="0 0 24 24">
+        <path
+          d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+        ></path>
+        <path d="M14 2v6h6"></path>
+        <path d="M8 13h8"></path>
+        <path d="M8 17h8"></path>
+      </symbol>
+
+      <symbol id="icon-check" viewBox="0 0 24 24">
+        <path d="M20 6 9 17l-5-5"></path>
+      </symbol>
+
+      <symbol id="icon-list" viewBox="0 0 24 24">
+        <path d="M8 6h13"></path>
+        <path d="M8 12h13"></path>
+        <path d="M8 18h13"></path>
+        <path d="M3 6h.01"></path>
+        <path d="M3 12h.01"></path>
+        <path d="M3 18h.01"></path>
+      </symbol>
+    </svg>
+
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg class="icon"><use href="#icon-shield"></use></svg>
+        </div>
+        <div>
+          <h1>Deteksi Hoaks</h1>
+          <p>Sistem Deteksi Hoaks Politik</p>
+        </div>
+      </div>
+
+      <nav class="menu">
+        <a class="menu-item" href="/dashboard">
+          <svg class="icon"><use href="#icon-grid"></use></svg>
+          Dashboard
+        </a>
+
+        <a class="menu-item" href="/analisis-berita">
+          <svg class="icon"><use href="#icon-search"></use></svg>
+          Analisis Berita
+        </a>
+
+        <a class="menu-item" href="/statistik">
+          <svg class="icon"><use href="#icon-chart"></use></svg>
+          Statistik
+        </a>
+
+        <a class="menu-item active" href="/dataset-info">
+          <svg class="icon"><use href="#icon-database"></use></svg>
+          Dataset Info
+        </a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <h2>Informasi Dataset</h2>
+      </header>
+
+      <section class="simple-page">
+        <div class="info-card" style="max-width: 760px">
+          <div class="card-title">
+            <svg class="icon"><use href="#icon-database"></use></svg>
+            <h3>Informasi Dataset</h3>
+          </div>
+
+          <div class="dataset-box">
+            <div class="dataset-icon">
+              <svg class="icon"><use href="#icon-file"></use></svg>
+            </div>
+
+            <div>
+              <h4 id="datasetName">Indonesian Fact and Hoax Political News</h4>
+              <p id="datasetDescription">
+                Dataset ini berisi kumpulan berita politik Indonesia yang telah
+                dilabeli sebagai fakta atau hoaks, digunakan untuk melatih model
+                deep learning dalam mendeteksi berita palsu.
+              </p>
+
+              <div class="dataset-tags">
+                <svg class="icon"><use href="#icon-check"></use></svg>
+                <span id="datasetSource">Sumber: TurnbackHoax & Tempo</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-item">
+              <strong id="datasetTotal">0</strong>
+              <span>Total Data</span>
+            </div>
+
+            <div class="stat-item">
+              <strong id="datasetFakta">0</strong>
+              <span>Berita Fakta</span>
+            </div>
+
+            <div class="stat-item">
+              <strong id="datasetHoax">0</strong>
+              <span>Berita Hoaks</span>
+            </div>
+
+            <div class="stat-item">
+              <strong id="modelAccuracy">0%</strong>
+              <span>Akurasi Model</span>
+            </div>
+          </div>
+
+          <div class="feature-list">
+            <h4>
+              <svg class="icon"><use href="#icon-list"></use></svg>
+              Fitur Dataset
+            </h4>
+
+            <ul id="featureList">
+              <li>Judul berita dalam Bahasa Indonesia</li>
+              <li>Konten lengkap berita politik</li>
+              <li>Label verifikasi Fakta/Hoaks</li>
+              <li>Metadata tambahan sumber dan tanggal</li>
+            </ul>
+          </div>
+
+          <div class="tech-box">
+            <h4>Teknologi yang Digunakan</h4>
+
+            <div id="technologyTags" class="tech-tags">
+              <span>Deep Learning</span>
+              <span>NLP</span>
+              <span>LSTM</span>
+              <span>BERT</span>
+              <span>TF-IDF</span>
+              <span>PyTorch</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">© 2026 Sistem Deteksi Berita Hoaks</footer>
+    </main>
+
+    <script src="/static/dataset-info.js"></script>
+  </body>
+</html>

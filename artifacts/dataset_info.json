@@ -1,0 +1,36 @@
+{
+  "dataset_name": "Indonesian Fact and Hoax Political News",
+  "dataset_sources": [
+    "TurnbackHoax",
+    "Tempo"
+  ],
+  "raw_total": 16973,
+  "clean_total": 13069,
+  "non_hoax_total": 6592,
+  "hoax_total": 6477,
+  "non_hoax_percent": 50.44,
+  "hoax_percent": 49.56,
+  "train_total": 10455,
+  "validation_total": 1307,
+  "test_total": 1307,
+  "features": [
+    "Judul dan konten berita dalam Bahasa Indonesia",
+    "Konten lengkap berita politik",
+    "Label verifikasi Fakta/Hoaks",
+    "Metadata tambahan sumber dan tanggal"
+  ],
+  "technologies": [
+    "Deep Learning",
+    "NLP",
+    "LSTM",
+    "BERT",
+    "TF-IDF",
+    "Logistic Regression",
+    "PyTorch",
+    "FastAPI"
+  ],
+  "label_mapping": {
+    "0": "Fakta / Non-Hoaks",
+    "1": "Hoaks"
+  }
+}

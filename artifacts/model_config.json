@@ -1,0 +1,9 @@
+{
+  "bert_model_name": "indobenchmark/indobert-base-p1",
+  "lstm_hidden": 256,
+  "num_layers": 2,
+  "dropout": 0.3,
+  "bidirectional": true,
+  "num_classes": 2,
+  "max_len": 128
+}

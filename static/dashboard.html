@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard - Deteksi Hoaks</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+
+  <body>
+    <svg
+      aria-hidden="true"
+      style="position: absolute; width: 0; height: 0; overflow: hidden"
+    >
+      <symbol id="icon-shield" viewBox="0 0 24 24">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+      </symbol>
+
+      <symbol id="icon-grid" viewBox="0 0 24 24">
+        <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+        <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+        <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+        <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+      </symbol>
+
+      <symbol id="icon-search" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="7"></circle>
+        <path d="M21 21l-4.3-4.3"></path>
+      </symbol>
+
+      <symbol id="icon-chart" viewBox="0 0 24 24">
+        <path d="M4 19V5"></path>
+        <path d="M4 19h16"></path>
+        <path d="M8 16v-5"></path>
+        <path d="M12 16V8"></path>
+        <path d="M16 16v-9"></path>
+      </symbol>
+
+      <symbol id="icon-database" viewBox="0 0 24 24">
+        <ellipse cx="12" cy="5" rx="7" ry="3"></ellipse>
+        <path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5"></path>
+        <path d="M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"></path>
+      </symbol>
+
+      <symbol id="icon-pulse" viewBox="0 0 24 24">
+        <path d="M3 12h4l3-8 4 16 3-8h4"></path>
+      </symbol>
+
+      <symbol id="icon-check-circle" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M8 12l3 3 5-6"></path>
+      </symbol>
+
+      <symbol id="icon-alert" viewBox="0 0 24 24">
+        <path d="M12 3 22 20H2z"></path>
+        <path d="M12 9v5"></path>
+        <path d="M12 17h.01"></path>
+      </symbol>
+
+      <symbol id="icon-trend" viewBox="0 0 24 24">
+        <path d="M3 17l6-6 4 4 7-8"></path>
+        <path d="M14 7h6v6"></path>
+      </symbol>
+
+      <symbol id="icon-clock" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M12 7v5l3 2"></path>
+      </symbol>
+    </svg>
+
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg class="icon"><use href="#icon-shield"></use></svg>
+        </div>
+
+        <div>
+          <h1>Deteksi Hoaks</h1>
+          <p>Sistem Deteksi Hoaks Politik</p>
+        </div>
+      </div>
+
+      <nav class="menu">
+        <a class="menu-item active" href="/dashboard">
+          <svg class="icon"><use href="#icon-grid"></use></svg>
+          Dashboard
+        </a>
+
+        <a class="menu-item" href="/analisis-berita">
+          <svg class="icon"><use href="#icon-search"></use></svg>
+          Analisis Berita
+        </a>
+
+        <a class="menu-item" href="/statistik">
+          <svg class="icon"><use href="#icon-chart"></use></svg>
+          Statistik
+        </a>
+
+        <a class="menu-item" href="/dataset-info">
+          <svg class="icon"><use href="#icon-database"></use></svg>
+          Dataset Info
+        </a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="page-header">
+        <h2>Dashboard</h2>
+      </header>
+
+      <section class="dashboard-wrapper">
+        <div class="dashboard-stats">
+          <div class="dashboard-stat-card">
+            <div class="dashboard-stat-icon bg-teal">
+              <svg class="icon"><use href="#icon-pulse"></use></svg>
+            </div>
+            <p>Total Analisis</p>
+            <h3 id="totalAnalysis">0</h3>
+          </div>
+
+          <div class="dashboard-stat-card">
+            <div class="dashboard-stat-icon bg-green">
+              <svg class="icon"><use href="#icon-check-circle"></use></svg>
+            </div>
+            <p>Berita Fakta</p>
+            <h3 id="totalFakta">0</h3>
+          </div>
+
+          <div class="dashboard-stat-card">
+            <div class="dashboard-stat-icon bg-red">
+              <svg class="icon"><use href="#icon-alert"></use></svg>
+            </div>
+            <p>Berita Hoaks</p>
+            <h3 id="totalHoaks">0</h3>
+          </div>
+
+          <div class="dashboard-stat-card">
+            <div class="dashboard-stat-icon bg-orange">
+              <svg class="icon"><use href="#icon-trend"></use></svg>
+            </div>
+            <p>Akurasi Model</p>
+            <h3 id="modelAccuracy">0%</h3>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="dashboard-card chart-card">
+            <div class="dashboard-card-title">
+              <svg class="icon"><use href="#icon-pulse"></use></svg>
+              <h3>Trend Analisis Mingguan</h3>
+            </div>
+
+            <div class="bar-chart">
+              <div class="chart-y-axis">
+                <span>5</span>
+                <span>4</span>
+                <span>3</span>
+                <span>2</span>
+                <span>0</span>
+              </div>
+
+              <div class="chart-bars">
+                <div class="bar-item">
+                  <div class="bar" style="height: 0%"></div>
+                  <span>Sen</span>
+                </div>
+                <div class="bar-item">
+                  <div class="bar" style="height: 0%"></div>
+                  <span>Sel</span>
+                </div>
+                <div class="bar-item">
+                  <div class="bar" style="height: 0%"></div>
+                  <span>Rab</span>
+                </div>
+                <div class="bar-item">
+                  <div class="bar" style="height: 0%"></div>
+                  <span>Kam</span>
+                </div>
+                <div class="bar-item">
+                  <div class="bar" style="height: 0%"></div>
+                  <span>Jum</span>
+                </div>
+                <div class="bar-item">
+                  <div class="bar" style="height: 0%"></div>
+                  <span>Sab</span>
+                </div>
+                <div class="bar-item">
+                  <div class="bar" style="height: 0%"></div>
+                  <span>Min</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-legend">
+              <span><b class="legend-fakta"></b>Berita Fakta</span>
+              <span><b class="legend-hoaks"></b>Berita Hoaks</span>
+            </div>
+          </div>
+
+          <div class="dashboard-side">
+            <div class="model-info-card">
+              <h4>Model Info</h4>
+
+              <div class="model-row">
+                <span>Versi:</span>
+                <b id="modelVersion">-</b>
+              </div>
+
+              <div class="model-row">
+                <span>Teknologi:</span>
+                <b id="modelTechnology">-</b>
+              </div>
+
+              <div class="model-row">
+                <span>Dataset:</span>
+                <b id="datasetInfo">0 data</b>
+              </div>
+
+              <div class="model-row">
+                <span>Waktu Proses:</span>
+                <b id="processTime">&lt;1s</b>
+              </div>
+            </div>
+
+            <div class="performance-card">
+              <h4>Performa Hari Ini</h4>
+
+              <div class="performance-row">
+                <span>Akurasi</span>
+                <b id="todayAccuracy">0%</b>
+              </div>
+
+              <div class="performance-line">
+                <div id="accuracyBar" style="width: 0%"></div>
+              </div>
+
+              <div class="performance-row">
+                <span>Total Diproses</span>
+                <b id="todayProcessed">0 berita</b>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-card latest-card">
+          <div class="dashboard-card-title">
+            <svg class="icon"><use href="#icon-clock"></use></svg>
+            <h3>Analisis Terbaru</h3>
+          </div>
+
+          <div id="latestAnalysisList" class="dashboard-latest-list">
+            <div class="dashboard-latest-item">
+              <div>
+                <h4>Memuat data analisis terbaru...</h4>
+                <p>Mohon tunggu sebentar</p>
+              </div>
+              <span class="dashboard-badge fakta">INFO</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer">© 2026 Sistem Deteksi Berita Hoaks</footer>
+    </main>
+
+    <script src="/static/dashboard.js"></script>
+  </body>
+</html>

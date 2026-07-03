@@ -1,0 +1,2 @@
+artifacts/best_lstm_head.pt filter=lfs diff=lfs merge=lfs -text
+artifacts/tfidf_logreg.pkl filter=lfs diff=lfs merge=lfs -text
