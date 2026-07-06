@@ -178,10 +178,14 @@ class HoaxPredictor:
     def get_status(self):
         if self.lstm_model is not None:
             model_used = "LSTM + IndoBERT + TF-IDF Calibration"
-            active_threshold = self.blend_threshold
         else:
             model_used = "TF-IDF Logistic Regression (fallback)"
-            active_threshold = self.fallback_threshold
+
+        # Untuk tampilan website, keputusan akhir memakai probabilitas terbesar.
+        # Threshold notebook (0.118) tetap disimpan sebagai informasi kalibrasi,
+        # tetapi tidak dipakai sebagai batas label akhir karena dapat membuat
+        # berita dengan 88% Fakta dan 11.96% Hoaks tetap ditandai Hoaks.
+        active_threshold = 0.5
 
         return {
             "model_used": model_used,
@@ -216,7 +220,12 @@ class HoaxPredictor:
         hoax_probability = float(np.clip(hoax_probability, 0.0, 1.0))
         non_hoax_probability = 1.0 - hoax_probability
 
-        prediction_value = 1 if hoax_probability >= threshold else 0
+        # Keputusan label akhir untuk website memakai probabilitas terbesar.
+        # Sebelumnya memakai threshold kalibrasi notebook (misalnya 0.118), sehingga
+        # kasus 88.04% Fakta dan 11.96% Hoaks tetap bisa keluar sebagai Hoaks.
+        # Dengan threshold 0.5, label konsisten dengan probabilitas yang ditampilkan.
+        decision_threshold = 0.5
+        prediction_value = 1 if hoax_probability >= decision_threshold else 0
         prediction = "Hoaks" if prediction_value == 1 else "Fakta"
         confidence = hoax_probability if prediction_value == 1 else non_hoax_probability
 
@@ -233,7 +242,8 @@ class HoaxPredictor:
             ),
             "tfidf_hoax_probability": round(tfidf_hoax_probability * 100, 2),
             "alpha": round(self.alpha, 4) if lstm_hoax_probability is not None else None,
-            "threshold": round(threshold, 4),
+            "threshold": round(decision_threshold, 4),
+            "calibration_threshold": round(threshold, 4),
             "model_used": model_used,
             "lstm_status": "loaded" if lstm_hoax_probability is not None else "fallback",
             "lstm_error": self.lstm_error if lstm_hoax_probability is None else None,

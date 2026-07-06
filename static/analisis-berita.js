@@ -298,6 +298,17 @@ function ensureHistoryStyles() {
       line-height: 1.45;
     }
 
+    .history-preview-body {
+      min-width: 0;
+    }
+
+    .history-item .history-badge {
+      justify-self: end;
+      white-space: nowrap;
+      min-width: 74px;
+      text-align: center;
+    }
+
     @media (max-width: 760px) {
       .history-search-box {
         grid-template-columns: 1fr;
@@ -880,6 +891,8 @@ async function loadHistory() {
 
     historyList.innerHTML = items
       .map((item, index) => {
+        const label = item.prediction_label || item.prediction || "Fakta";
+        const labelClass = getLabelClass(label);
         const title = item.title || "Tanpa judul";
         const contentPreview = shortWords(item.content || "", 5);
 
@@ -891,10 +904,14 @@ async function loadHistory() {
             tabindex="0"
             title="Klik untuk melihat detail analisis"
           >
-            <div>
+            <div class="history-preview-body">
               <h4 class="history-preview-title">${escapeHtml(title)}</h4>
               <p class="history-preview-content">${escapeHtml(contentPreview)}</p>
             </div>
+
+            <span class="history-badge ${labelClass}">
+              ${escapeHtml(label)}
+            </span>
           </div>
         `;
       })
