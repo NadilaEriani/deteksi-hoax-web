@@ -124,6 +124,128 @@ def get_history(limit: int = 20):
     return [dict(row) for row in rows]
 
 
+def get_history_paginated(
+    limit: int = 10,
+    page: int = 1,
+    search: str = "",
+    period: str = "all",
+):
+    """Ambil riwayat analisis dengan pagination, filter waktu, dan pencarian."""
+
+    try:
+        limit = int(limit)
+    except Exception:
+        limit = 10
+
+    try:
+        page = int(page)
+    except Exception:
+        page = 1
+
+    limit = max(1, min(limit, 100))
+    page = max(1, page)
+
+    allowed_periods = {"all", "today", "7days", "1month"}
+    period = str(period or "all").strip().lower()
+
+    if period in {"7", "7day", "7_day", "7_days", "week", "weekly"}:
+        period = "7days"
+    elif period in {"30", "30days", "30_days", "month", "monthly", "bulan"}:
+        period = "1month"
+    elif period not in allowed_periods:
+        period = "all"
+
+    where_clauses = []
+    params = []
+
+    today = datetime.now().date()
+
+    if period == "today":
+        where_clauses.append("date(substr(created_at, 1, 10)) = date(?)")
+        params.append(today.strftime("%Y-%m-%d"))
+    elif period == "7days":
+        start_date = today - timedelta(days=6)
+        where_clauses.append("date(substr(created_at, 1, 10)) BETWEEN date(?) AND date(?)")
+        params.extend([start_date.strftime("%Y-%m-%d"), today.strftime("%Y-%m-%d")])
+    elif period == "1month":
+        start_date = today - timedelta(days=29)
+        where_clauses.append("date(substr(created_at, 1, 10)) BETWEEN date(?) AND date(?)")
+        params.extend([start_date.strftime("%Y-%m-%d"), today.strftime("%Y-%m-%d")])
+
+    search = str(search or "").strip()
+
+    if search:
+        like_value = f"%{search}%"
+        where_clauses.append("""
+            (
+                title LIKE ?
+                OR content LIKE ?
+                OR author LIKE ?
+                OR source LIKE ?
+                OR publication_date LIKE ?
+                OR url LIKE ?
+                OR prediction_label LIKE ?
+                OR created_at LIKE ?
+            )
+        """)
+        params.extend([like_value] * 8)
+
+    where_sql = ""
+
+    if where_clauses:
+        where_sql = "WHERE " + " AND ".join(where_clauses)
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        f"""
+        SELECT COUNT(*) AS total
+        FROM predictions
+        {where_sql}
+        """,
+        params,
+    )
+
+    total = int(cursor.fetchone()["total"])
+    total_pages = max(1, (total + limit - 1) // limit)
+
+    if page > total_pages:
+        page = total_pages
+
+    offset = (page - 1) * limit
+
+    cursor.execute(
+        f"""
+        SELECT *
+        FROM predictions
+        {where_sql}
+        ORDER BY id DESC
+        LIMIT ? OFFSET ?
+        """,
+        [*params, limit, offset],
+    )
+
+    rows = cursor.fetchall()
+    conn.close()
+
+    return {
+        "items": [dict(row) for row in rows],
+        "pagination": {
+            "page": page,
+            "limit": limit,
+            "total": total,
+            "total_pages": total_pages,
+            "has_previous": page > 1,
+            "has_next": page < total_pages,
+        },
+        "filters": {
+            "period": period,
+            "search": search,
+        },
+    }
+
+
 def delete_prediction(prediction_id: int):
     conn = get_connection()
     cursor = conn.cursor()

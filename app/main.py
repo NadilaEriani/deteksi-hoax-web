@@ -2,7 +2,7 @@ import time
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -18,6 +18,7 @@ from app.database import (
     init_db,
     insert_prediction,
     get_history,
+    get_history_paginated,
     delete_prediction,
     get_statistics,
     get_weekly_trend,
@@ -119,10 +120,20 @@ def dataset_info_page():
 
 @app.get("/api/health")
 def health():
+    try:
+        predictor = get_predictor()
+        predictor_status = predictor.get_status()
+    except Exception as error:
+        predictor_status = {
+            "model_used": "Belum siap",
+            "lstm_loaded": False,
+            "lstm_error": str(error),
+        }
+
     return {
         "success": True,
         "message": "Backend Deteksi Hoaks berjalan.",
-        "model": "TF-IDF Logistic Regression",
+        **predictor_status,
     }
 
 
@@ -171,10 +182,26 @@ def predict(payload: PredictionRequest):
 
 
 @app.get("/api/history")
-def history(limit: int = 20):
+def history(
+    limit: int = 10,
+    page: int = 1,
+    search: Optional[str] = None,
+    period: str = "all",
+    date_range: Optional[str] = Query(default=None, alias="range"),
+):
+    selected_period = date_range or period
+    result = get_history_paginated(
+        limit=limit,
+        page=page,
+        search=search or "",
+        period=selected_period,
+    )
+
     return {
         "success": True,
-        "data": get_history(limit),
+        "data": result["items"],
+        "pagination": result["pagination"],
+        "filters": result["filters"],
     }
 
 

@@ -37,6 +37,7 @@ DEFAULT_DATASET_INFO = {
         "TurnbackHoax",
         "Tempo"
     ],
+    "dataset_url": "https://www.kaggle.com/datasets/linkgish/indonesian-fact-and-hoax-political-news",
     "raw_total": 16973,
     "clean_total": 13069,
     "non_hoax_total": 6592,

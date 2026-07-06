@@ -20,6 +20,16 @@ const hoaxProbability = document.getElementById("hoaxProbability");
 
 const historyList = document.getElementById("historyList");
 const refreshHistoryBtn = document.getElementById("refreshHistoryBtn");
+const historySearchInput = document.getElementById("historySearchInput");
+const historySearchBtn = document.getElementById("historySearchBtn");
+const historyClearBtn = document.getElementById("historyClearBtn");
+const historyPeriodButtons = document.querySelectorAll("[data-history-period]");
+const historyPrevBtn = document.getElementById("historyPrevBtn");
+const historyNextBtn = document.getElementById("historyNextBtn");
+const historyPageInfo = document.getElementById("historyPageInfo");
+const historySummary = document.getElementById("historySummary");
+const historyPagination = document.getElementById("historyPagination");
+
 const factExampleBtn = document.getElementById("factExampleBtn");
 const hoaxExampleBtn = document.getElementById("hoaxExampleBtn");
 
@@ -28,7 +38,18 @@ const datasetFakta = document.getElementById("datasetFakta");
 const datasetHoax = document.getElementById("datasetHoax");
 const modelAccuracy = document.getElementById("modelAccuracy");
 
+const KAGGLE_DATASET_URL =
+  "https://www.kaggle.com/datasets/linkgish/indonesian-fact-and-hoax-political-news";
+
 let historyData = [];
+let historyState = {
+  page: 1,
+  limit: 10,
+  total: 0,
+  totalPages: 1,
+  period: "all",
+  search: "",
+};
 
 function validateForm() {
   const hasTitle = titleInput.value.trim().length > 0;
@@ -118,6 +139,23 @@ function shortText(text, maxLength = 260) {
   return `${value.slice(0, maxLength)}...`;
 }
 
+function shortWords(text, maxWords = 5) {
+  const words = String(text || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (words.length === 0) {
+    return "-";
+  }
+
+  if (words.length <= maxWords) {
+    return words.join(" ");
+  }
+
+  return `${words.slice(0, maxWords).join(" ")}...`;
+}
+
 function getLabelClass(label) {
   return String(label || "").toLowerCase() === "hoaks" ? "hoaks" : "fakta";
 }
@@ -134,6 +172,145 @@ function getSafeUrl(url) {
   }
 
   return "";
+}
+
+function ensureHistoryStyles() {
+  if (document.getElementById("historyFilterStyle")) {
+    return;
+  }
+
+  const style = document.createElement("style");
+  style.id = "historyFilterStyle";
+  style.textContent = `
+    .dataset-tags {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .dataset-tags:hover span {
+      text-decoration: underline;
+    }
+
+    .history-header small {
+      display: block;
+      margin-top: 5px;
+      color: #6d8088;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .history-controls {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .history-search-box {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 10px;
+    }
+
+    .history-search-box input {
+      width: 100%;
+      border: 1px solid #d4e1df;
+      border-radius: 9px;
+      padding: 11px 12px;
+      font-size: 14px;
+      color: #24333d;
+      background: #ffffff;
+    }
+
+    .history-search-box input:focus {
+      outline: none;
+      border-color: #12b8a6;
+      box-shadow: 0 0 0 3px rgba(18, 184, 166, 0.14);
+    }
+
+    .history-search-box button,
+    .history-filter-tabs button,
+    .history-pagination button {
+      border: none;
+      background: #edf8f6;
+      color: #087e70;
+      padding: 10px 13px;
+      border-radius: 9px;
+      cursor: pointer;
+      font-weight: 900;
+      transition: background 0.2s ease, transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .history-search-box button:hover,
+    .history-filter-tabs button:hover,
+    .history-pagination button:hover:not(:disabled) {
+      background: #d9f4ef;
+      transform: translateY(-1px);
+    }
+
+    .history-search-box button:first-of-type,
+    .history-filter-tabs button.active {
+      background: #087e70;
+      color: #ffffff;
+    }
+
+    .history-filter-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .history-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .history-pagination button {
+      width: 42px;
+      height: 38px;
+      padding: 0;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .history-pagination button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .history-pagination span {
+      color: #52676f;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .history-preview-title {
+      margin-bottom: 5px;
+    }
+
+    .history-preview-content {
+      margin: 0;
+      color: #52676f;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 760px) {
+      .history-search-box {
+        grid-template-columns: 1fr;
+      }
+
+      .history-header {
+        align-items: flex-start;
+        gap: 12px;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
 }
 
 function ensureDetailModal() {
@@ -604,6 +781,7 @@ async function submitPrediction(event) {
 
     renderResult(data);
     showMessage("Analisis berhasil dilakukan.", "success");
+    historyState.page = 1;
     await loadHistory();
   } catch (error) {
     showMessage(error.message || "Terjadi kesalahan saat melakukan prediksi.");
@@ -612,9 +790,70 @@ async function submitPrediction(event) {
   }
 }
 
+function buildHistoryUrl() {
+  const params = new URLSearchParams();
+  params.set("limit", String(historyState.limit));
+  params.set("page", String(historyState.page));
+  params.set("period", historyState.period || "all");
+
+  if (historyState.search) {
+    params.set("search", historyState.search);
+  }
+
+  return `/api/history?${params.toString()}`;
+}
+
+function updateHistoryControls(pagination = {}) {
+  const page = Number(pagination.page || historyState.page || 1);
+  const totalPages = Number(
+    pagination.total_pages || historyState.totalPages || 1,
+  );
+  const total = Number(pagination.total || historyState.total || 0);
+  const limit = Number(pagination.limit || historyState.limit || 10);
+
+  historyState.page = page;
+  historyState.totalPages = Math.max(1, totalPages);
+  historyState.total = total;
+  historyState.limit = limit;
+
+  if (historyPrevBtn) {
+    historyPrevBtn.disabled = page <= 1;
+  }
+
+  if (historyNextBtn) {
+    historyNextBtn.disabled = page >= historyState.totalPages;
+  }
+
+  if (historyPageInfo) {
+    historyPageInfo.textContent = `Halaman ${page} dari ${historyState.totalPages}`;
+  }
+
+  if (historyPagination) {
+    historyPagination.style.display = total > limit ? "flex" : "none";
+  }
+
+  if (historySummary) {
+    if (total === 0) {
+      historySummary.textContent =
+        "Tidak ada riwayat yang cocok dengan filter.";
+    } else {
+      const start = (page - 1) * limit + 1;
+      const end = Math.min(page * limit, total);
+      historySummary.textContent = `Menampilkan ${formatNumber(start)}-${formatNumber(end)} dari ${formatNumber(total)} riwayat.`;
+    }
+  }
+
+  historyPeriodButtons.forEach((button) => {
+    button.classList.toggle(
+      "active",
+      button.dataset.historyPeriod === historyState.period,
+    );
+  });
+}
+
 async function loadHistory() {
   try {
-    const response = await fetch("/api/history?limit=10");
+    const response = await fetch(buildHistoryUrl());
     const result = await response.json();
 
     if (!response.ok || !result.success) {
@@ -622,21 +861,27 @@ async function loadHistory() {
     }
 
     const items = result.data || [];
+    const pagination = result.pagination || {
+      page: 1,
+      limit: items.length || historyState.limit,
+      total: items.length,
+      total_pages: 1,
+      has_previous: false,
+      has_next: false,
+    };
+
     historyData = items;
+    updateHistoryControls(pagination);
 
     if (!items || items.length === 0) {
-      historyList.innerHTML = `<p class="empty-history">Belum ada riwayat analisis.</p>`;
+      historyList.innerHTML = `<p class="empty-history">Belum ada riwayat analisis yang cocok.</p>`;
       return;
     }
 
     historyList.innerHTML = items
       .map((item, index) => {
-        const label = item.prediction_label || "Fakta";
-        const labelClass = getLabelClass(label);
         const title = item.title || "Tanpa judul";
-        const date = item.created_at || "-";
-        const confidence = item.confidence || 0;
-        const source = item.source || "Sumber tidak diisi";
+        const contentPreview = shortWords(item.content || "", 5);
 
         return `
           <div
@@ -644,24 +889,24 @@ async function loadHistory() {
             data-index="${index}"
             role="button"
             tabindex="0"
-            onclick="openHistoryDetailByIndex(${index})"
-            onkeydown="handleInlineHistoryKeydown(event, ${index})"
             title="Klik untuk melihat detail analisis"
           >
             <div>
-              <h4>${escapeHtml(title)}</h4>
-              <p>${escapeHtml(source)} • ${escapeHtml(date)} • Confidence ${formatPercent(confidence)}</p>
+              <h4 class="history-preview-title">${escapeHtml(title)}</h4>
+              <p class="history-preview-content">${escapeHtml(contentPreview)}</p>
             </div>
-
-            <span class="history-badge ${labelClass}">
-              ${escapeHtml(label)}
-            </span>
           </div>
         `;
       })
       .join("");
   } catch (error) {
     historyList.innerHTML = `<p class="empty-history">Gagal memuat riwayat.</p>`;
+    updateHistoryControls({
+      page: 1,
+      limit: historyState.limit,
+      total: 0,
+      total_pages: 1,
+    });
   }
 }
 
@@ -752,6 +997,14 @@ function fillHoaxExample() {
   validateForm();
 }
 
+function applyHistorySearch() {
+  historyState.search = historySearchInput
+    ? historySearchInput.value.trim()
+    : "";
+  historyState.page = 1;
+  loadHistory();
+}
+
 window.openHistoryDetailByIndex = openHistoryDetailByIndex;
 window.handleInlineHistoryKeydown = handleInlineHistoryKeydown;
 
@@ -770,6 +1023,63 @@ hoaxExampleBtn.addEventListener("click", fillHoaxExample);
 historyList.addEventListener("click", handleHistoryClick);
 historyList.addEventListener("keydown", handleHistoryKeyboard);
 
+if (historySearchBtn) {
+  historySearchBtn.addEventListener("click", applyHistorySearch);
+}
+
+if (historySearchInput) {
+  historySearchInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      applyHistorySearch();
+    }
+  });
+}
+
+if (historyClearBtn) {
+  historyClearBtn.addEventListener("click", () => {
+    if (historySearchInput) {
+      historySearchInput.value = "";
+    }
+
+    historyState.search = "";
+    historyState.period = "all";
+    historyState.page = 1;
+    loadHistory();
+  });
+}
+
+historyPeriodButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    historyState.period = button.dataset.historyPeriod || "all";
+    historyState.page = 1;
+    loadHistory();
+  });
+});
+
+if (historyPrevBtn) {
+  historyPrevBtn.addEventListener("click", () => {
+    if (historyState.page <= 1) {
+      return;
+    }
+
+    historyState.page -= 1;
+    loadHistory();
+  });
+}
+
+if (historyNextBtn) {
+  historyNextBtn.addEventListener("click", () => {
+    if (historyState.page >= historyState.totalPages) {
+      return;
+    }
+
+    historyState.page += 1;
+    loadHistory();
+  });
+}
+
+ensureHistoryStyles();
 ensureDetailModal();
 updateCounter();
 validateForm();

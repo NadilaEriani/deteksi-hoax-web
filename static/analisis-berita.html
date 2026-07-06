@@ -278,31 +278,37 @@
                   melatih model deep learning dalam mendeteksi berita palsu.
                 </p>
 
-                <div class="dataset-tags">
+                <a
+                  id="kaggleDatasetLink"
+                  class="dataset-tags"
+                  href="https://www.kaggle.com/datasets/linkgish/indonesian-fact-and-hoax-political-news"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <svg class="icon"><use href="#icon-check"></use></svg>
                   <span>Lihat di Kaggle</span>
-                </div>
+                </a>
               </div>
             </div>
 
             <div class="stats-grid">
               <div class="stat-item">
-                <strong id="datasetTotal">7,800+</strong>
+                <strong id="datasetTotal">13.069</strong>
                 <span>Total Data</span>
               </div>
 
               <div class="stat-item">
-                <strong id="datasetFakta">900+</strong>
+                <strong id="datasetFakta">6.592</strong>
                 <span>Berita Fakta</span>
               </div>
 
               <div class="stat-item">
-                <strong id="datasetHoax">900+</strong>
+                <strong id="datasetHoax">6.477</strong>
                 <span>Berita Hoaks</span>
               </div>
 
               <div class="stat-item">
-                <strong id="modelAccuracy">92.5%</strong>
+                <strong id="modelAccuracy">99.39%</strong>
                 <span>Akurasi Model</span>
               </div>
             </div>
@@ -329,7 +335,6 @@
                 <span>NLP</span>
                 <span>LSTM</span>
                 <span>BERT</span>
-                <span>TensorFlow</span>
                 <span>PyTorch</span>
                 <span>FastAPI</span>
               </div>
@@ -340,18 +345,66 @@
 
       <section class="history-section">
         <div class="history-header">
-          <h3>Riwayat Analisis</h3>
+          <div>
+            <h3>Riwayat Analisis</h3>
+            <small id="historySummary"
+              >Menampilkan semua riwayat analisis.</small
+            >
+          </div>
+
           <button type="button" id="refreshHistoryBtn">Refresh</button>
+        </div>
+
+        <div class="history-controls">
+          <div class="history-search-box">
+            <input
+              type="search"
+              id="historySearchInput"
+              placeholder="Cari judul, konten, sumber, penulis, label..."
+            />
+            <button type="button" id="historySearchBtn">Cari</button>
+            <button type="button" id="historyClearBtn">Reset</button>
+          </div>
+
+          <div
+            class="history-filter-tabs"
+            aria-label="Filter waktu riwayat analisis"
+          >
+            <button type="button" class="active" data-history-period="all">
+              Semua
+            </button>
+            <button type="button" data-history-period="today">Hari ini</button>
+            <button type="button" data-history-period="7days">7 Hari</button>
+            <button type="button" data-history-period="1month">1 Bulan</button>
+          </div>
         </div>
 
         <div id="historyList" class="history-list">
           <p class="empty-history">Belum ada riwayat analisis.</p>
+        </div>
+
+        <div class="history-pagination" id="historyPagination">
+          <button
+            type="button"
+            id="historyPrevBtn"
+            aria-label="Halaman sebelumnya"
+          >
+            ‹
+          </button>
+          <span id="historyPageInfo">Halaman 1 dari 1</span>
+          <button
+            type="button"
+            id="historyNextBtn"
+            aria-label="Halaman berikutnya"
+          >
+            ›
+          </button>
         </div>
       </section>
 
       <footer class="footer">© 2026 Sistem Deteksi Berita Hoaks</footer>
     </main>
 
-    <script src="/static/analisis-berita.js?v=popup-detail-3"></script>
+    <script src="/static/analisis-berita.js?v=history-filter-jarvis-1"></script>
   </body>
 </html>

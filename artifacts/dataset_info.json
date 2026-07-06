@@ -32,5 +32,6 @@
   "label_mapping": {
     "0": "Fakta / Non-Hoaks",
     "1": "Hoaks"
-  }
+  },
+  "dataset_url": "https://www.kaggle.com/datasets/linkgish/indonesian-fact-and-hoax-political-news"
 }

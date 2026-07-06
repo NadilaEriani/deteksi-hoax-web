@@ -358,7 +358,7 @@ function getDetailData(type) {
         </p>
         ${detailRows([
           ["Rata-rata Waktu Proses", formatProcessTime(waktuProses)],
-          ["Mode Prediksi Web", "TF-IDF Logistic Regression"],
+          ["Mode Prediksi Web", "LSTM + IndoBERT + TF-IDF Calibration"],
           ["Sumber Data", "data/hoax.db"],
         ])}
       `,
