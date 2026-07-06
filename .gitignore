@@ -16,3 +16,4 @@ data/*.db-wal
 Thumbs.db
 
 *.log
+artifacts/lstm_training_history.png
