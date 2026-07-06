@@ -1,3 +1,5 @@
+import json
+import os
 import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -8,6 +10,9 @@ from app.artifact_reader import get_model_metrics, get_dataset_info
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 DB_PATH = DATA_DIR / "hoax.db"
+SAMPLE_HISTORY_PATH = BASE_DIR / "artifacts" / "sample_analysis_history.json"
+MIN_SAMPLE_HISTORY_TOTAL = 30
+
 
 
 def get_connection():
@@ -26,6 +31,184 @@ def ensure_column(cursor, table_name: str, column_name: str, column_definition: 
         cursor.execute(
             f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_definition}"
         )
+
+
+
+def normalize_percentage(value, default=0):
+    try:
+        number = float(value)
+    except Exception:
+        return float(default)
+
+    return round(max(0.0, min(number, 100.0)), 2)
+
+
+def build_sample_created_at(sample: dict, index: int):
+    """Buat waktu analisis dinamis agar data demo selalu terlihat relevan."""
+
+    now = datetime.now()
+
+    if sample.get("created_at"):
+        return str(sample.get("created_at"))
+
+    try:
+        days_ago = int(sample.get("days_ago", index % 30))
+    except Exception:
+        days_ago = index % 30
+
+    time_value = str(sample.get("time", "09:00:00")).strip()
+
+    try:
+        hour, minute, second = [int(part) for part in time_value.split(":")[:3]]
+    except Exception:
+        hour, minute, second = 9, 0, 0
+
+    created_date = now - timedelta(days=max(0, days_ago))
+    created_date = created_date.replace(
+        hour=max(0, min(hour, 23)),
+        minute=max(0, min(minute, 59)),
+        second=max(0, min(second, 59)),
+        microsecond=0,
+    )
+
+    return created_date.strftime("%Y-%m-%d %H:%M:%S")
+
+
+def load_sample_history():
+    if not SAMPLE_HISTORY_PATH.exists():
+        return []
+
+    try:
+        with SAMPLE_HISTORY_PATH.open("r", encoding="utf-8") as file:
+            data = json.load(file)
+    except Exception:
+        return []
+
+    if isinstance(data, dict):
+        items = data.get("items", [])
+    else:
+        items = data
+
+    if not isinstance(items, list):
+        return []
+
+    return items
+
+
+def seed_sample_history_if_needed():
+    """
+    Isi riwayat demo otomatis saat database masih kosong/terlalu sedikit.
+
+    Tujuannya agar hasil deploy Hugging Face tidak terlihat kosong setiap rebuild.
+    Data hanya ditambahkan sampai total minimal 30 dan tidak menggandakan judul
+    yang sudah ada.
+    """
+
+    seed_enabled = os.getenv("SEED_SAMPLE_HISTORY", "1").strip().lower()
+
+    if seed_enabled in {"0", "false", "no", "off"}:
+        return 0
+
+    samples = load_sample_history()
+
+    if not samples:
+        return 0
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT COUNT(*) AS total FROM predictions")
+    total_predictions = int(cursor.fetchone()["total"] or 0)
+
+    if total_predictions >= MIN_SAMPLE_HISTORY_TOTAL:
+        conn.close()
+        return 0
+
+    cursor.execute("SELECT title FROM predictions")
+    existing_titles = {
+        str(row["title"] or "").strip().lower()
+        for row in cursor.fetchall()
+    }
+
+    inserted = 0
+
+    for index, sample in enumerate(samples):
+        if total_predictions + inserted >= MIN_SAMPLE_HISTORY_TOTAL:
+            break
+
+        title = str(sample.get("title") or "").strip()
+        content = str(sample.get("content") or "").strip()
+
+        if not title or not content:
+            continue
+
+        title_key = title.lower()
+
+        if title_key in existing_titles:
+            continue
+
+        label = str(sample.get("prediction_label") or sample.get("prediction") or "Fakta").strip()
+        label_lower = label.lower()
+        is_hoax = label_lower in {"hoaks", "hoax", "1", "true"}
+
+        prediction_label = "Hoaks" if is_hoax else "Fakta"
+        prediction_value = 1 if is_hoax else 0
+
+        if is_hoax:
+            hoax_probability = normalize_percentage(sample.get("hoax_probability"), 90)
+            non_hoax_probability = normalize_percentage(
+                sample.get("non_hoax_probability"),
+                100 - hoax_probability,
+            )
+            confidence = normalize_percentage(sample.get("confidence"), hoax_probability)
+        else:
+            non_hoax_probability = normalize_percentage(sample.get("non_hoax_probability"), 90)
+            hoax_probability = normalize_percentage(
+                sample.get("hoax_probability"),
+                100 - non_hoax_probability,
+            )
+            confidence = normalize_percentage(sample.get("confidence"), non_hoax_probability)
+
+        cursor.execute("""
+            INSERT INTO predictions (
+                title,
+                content,
+                author,
+                source,
+                publication_date,
+                url,
+                prediction_label,
+                prediction_value,
+                confidence,
+                hoax_probability,
+                non_hoax_probability,
+                processing_time_seconds,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            title,
+            content,
+            sample.get("author"),
+            sample.get("source"),
+            sample.get("publication_date"),
+            sample.get("url"),
+            prediction_label,
+            prediction_value,
+            confidence,
+            hoax_probability,
+            non_hoax_probability,
+            float(sample.get("processing_time_seconds") or 0.42),
+            build_sample_created_at(sample, index),
+        ))
+
+        existing_titles.add(title_key)
+        inserted += 1
+
+    conn.commit()
+    conn.close()
+
+    return inserted
 
 
 def init_db():
@@ -59,6 +242,8 @@ def init_db():
 
     conn.commit()
     conn.close()
+
+    seed_sample_history_if_needed()
 
 
 def insert_prediction(payload: dict, result: dict, processing_time_seconds: float = 0):
